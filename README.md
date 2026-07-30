@@ -1,4 +1,4 @@
-# 🧪 PreddyHub — QA / SDET Practical Assignment
+# 🧪 QA / SDET Practical Assignment
 
 > A hands-on QA assessment for [PreddyHub](https://preddyhub.com) — a live football score-prediction web app for the FIFA World Cup 2026, Premier League, and La Liga.
 
