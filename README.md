@@ -1,6 +1,6 @@
 # 🧪 PreddyHub — QA / SDET Practical Assignment
 
-> A hands-on QA assessment for [PreddyHub](https://preddyhub.com) — a live football score-prediction web app for the FIFA World Cup 2026.
+> A hands-on QA assessment for [PreddyHub](https://preddyhub.com) — a live football score-prediction web app for the FIFA World Cup 2026, Premier League, and La Liga.
 
 ---
 
@@ -11,7 +11,7 @@
 | **1. Coding** | Java scoring method (0–100) with JUnit 5 tests | [`PredictionScorer.java`](src/main/java/PredictionScorer.java) / [`PredictionScorerTest.java`](src/test/java/PredictionScorerTest.java) |
 | **2. UI Automation** | Selenium E2E test — predict a score and verify persistence | [`PredictScoreE2ETest.java`](src/test/java/PredictScoreE2ETest.java) |
 | **3. API Testing** | REST Assured tests for the leaderboard endpoint | [`LeaderboardApiTest.java`](src/test/java/LeaderboardApiTest.java) |
-| **4. Bug Report** | Real bug found on the live app, with reproduction steps | [`bug-report.md`](docs/bug-report.md) |
+| **4. Bug Report** | 9 real bugs found on the live app | [`bug-report.md`](docs/bug-report.md) / [`BugRegressionTest.java`](src/test/java/BugRegressionTest.java) |
 
 ---
 
@@ -34,7 +34,7 @@ A method that scores how close a user's prediction is to the actual match result
 
 ### Test Results
 
-All expected values were verified by tracing through the formula by hand:
+All expected values verified by tracing through the formula by hand:
 
 ```
 ✅ Exact score (2-1 → 2-1)           = 100
@@ -67,17 +67,26 @@ All expected values were verified by tracing through the formula by hand:
 GET /api/leaderboard?comp=world-cup-2026
 ```
 
-**Key finding:** The `comp` query parameter is silently ignored by the server — the same data is returned whether `comp` is missing, valid, or set to a nonexistent value. This is likely a bug.
+**Key finding:** The `comp` query parameter is silently ignored by the server — the same data is returned whether `comp` is missing, valid, or set to a nonexistent value.
 
 ---
 
-## 🐛 Task 4 — Bug Report
+## 🐛 Task 4 — Bugs Found (9 Total)
 
-**Bug:** The "FINAL OUTCOME" section in the Live Match Centre shows _"draw at 90' → extra time & penalties"_ on knockout matches that were **not** decided by penalties.
+| # | Bug | Severity | Area |
+|---|-----|----------|------|
+| 1 | FINAL OUTCOME label wrong on knockout matches | P2 | Live Match Centre |
+| 2 | My Predictions counter doesn't match list | P3 | My Predictions |
+| 3 | EPL My Predictions returns 404 | P2 | Routing |
+| 4 | Leaderboard API ignores `comp` param | P3 | API |
+| 5 | La Liga My Predictions returns 404 | P2 | Routing |
+| 6 | La Liga Leaderboard silently redirects to homepage | P3 | Routing |
+| 7 | Minus (−) button doesn't work on prediction cards | P2 | Predict Scores |
+| 8 | Nonexistent match ID loads a real match | P3 | Live Match Centre |
+| 9 | "Add to Home Screen" banner overlaps content on mobile | P3 | Mobile UX |
 
-**Example:** Spain vs Argentina (Final) — score is **1-0 AET** (decided in extra time), but the label says "draw at 90' → extra time & penalties."
-
-👉 Full details with reproduction steps: [`docs/bug-report.md`](docs/bug-report.md)
+👉 Full details with reproduction steps: [`docs/bug-report.md`](docs/bug-report.md)  
+👉 Automated regression tests: [`src/test/java/BugRegressionTest.java`](src/test/java/BugRegressionTest.java)
 
 ---
 
@@ -100,9 +109,10 @@ qa-assignment/
 │   └── test/java/
 │       ├── PredictionScorerTest.java      # Unit tests
 │       ├── PredictScoreE2ETest.java       # Selenium E2E test
-│       └── LeaderboardApiTest.java        # REST Assured tests
+│       ├── LeaderboardApiTest.java        # REST Assured tests
+│       └── BugRegressionTest.java         # Regression tests for 9 bugs
 ├── docs/
-│   └── bug-report.md                      # Bug report
+│   └── bug-report.md                      # Detailed bug report
 ├── .gitignore
 └── README.md
 ```

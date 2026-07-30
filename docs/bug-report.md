@@ -1,82 +1,117 @@
-# 🐛 Bug Report: Incorrect "FINAL OUTCOME" Label on Knockout Matches
+# 🐛 Bug Report — PreddyHub
 
-## Summary
+> All bugs tested on **Windows 11, Chrome 137** (desktop: 1280×720, mobile: 375×812).  
+> Signed in as "Aditya Raj" via Google. Tested July 30–31, 2026.
 
-The Live Match Centre displays **"draw at 90' → extra time & penalties"** on all knockout-stage matches — even when the match was decided in extra time without a penalty shootout.
+---
 
-## Severity
+## Bug 1: "FINAL OUTCOME" Label Wrong on Knockout Matches
 
-**P2 — Medium** · Incorrect data displayed to users; misleads prediction analysis.
+**Severity:** P2
 
-## Environment
+**Steps:**
+1. Go to `https://preddyhub.com/world-cup-2026/live?match=537390`
+2. Score shows **Spain 1 – 0 Argentina** with an **"AET"** badge
+3. Scroll to the **"FINAL OUTCOME"** section
 
-| Field | Value |
-|-------|-------|
-| Browser | Chrome 137 |
-| OS | Windows 11 |
-| Viewport | 1280×720 (desktop), 390×844 (mobile) |
-| Account | Signed in as "Aditya Raj" via Google |
-| Date | July 30, 2026 |
+**Expected:** Label should say "decided in extra time" — no mention of penalties.
 
-## Steps to Reproduce
+**Actual:** Label says **"draw at 90' → extra time & penalties"** — wrong, because Spain won 1-0 in extra time (no penalties). The bar below shows "100% ESP / 0% draw / 0% ARG" which contradicts the "draw" in the label. Same text appears on all knockout matches.
 
-1. Open Chrome on desktop
-2. Navigate to `https://preddyhub.com/world-cup-2026/live?match=537390`
-3. This loads the **Spain vs Argentina** World Cup Final
-4. Observe the score: **Spain 1 – 0 Argentina** with an **"AET"** (After Extra Time) badge
-5. Scroll down to the **"FINAL OUTCOME"** section
+---
 
-## Expected Result
+## Bug 2: "My Predictions" Counter Doesn't Match the List
 
-Since Spain won **1-0 in extra time** (no penalty shootout occurred), the FINAL OUTCOME label should reflect this — e.g., "decided in extra time" or "Spain win after extra time."
+**Severity:** P3
 
-It should **not** mention penalties.
+**Steps:**
+1. Sign in → make predictions on EPL → lock them in
+2. Go to `https://preddyhub.com/world-cup-2026/my-predictions`
 
-## Actual Result
+**Expected:** Counter and list should be consistent.
 
-The label says:
+**Actual:** Stats card shows **"2 PREDICTED"** but list says **"No predictions yet."** Counter pulls from all competitions, list only shows World Cup.
 
-> **"draw at 90' → extra time & penalties"**
+---
 
-This is wrong — the match was decided in extra time, not on penalties. The 1-0 AET scoreline confirms no penalty shootout took place.
+## Bug 3: EPL "My Predictions" Returns 404
 
-Additionally, the prediction probability bar below shows **100% ESP / 0% draw / 0% ARG**, which directly contradicts the "draw" mentioned in the label text.
+**Severity:** P2
 
-## Scope
+**Steps:** Sign in → go to `https://preddyhub.com/premier-league/my-predictions`
 
-This affects **all knockout matches**, not just the Final:
+**Expected:** Should show EPL predictions page.
 
-| Match | Score | FINAL OUTCOME text | Correct? |
-|-------|-------|--------------------|----------|
-| Spain vs Argentina (Final) | 1 – 0 AET | "draw at 90' → extra time & penalties" | ❌ |
-| France vs England (3rd Place) | 4 – 6 | "draw at 90' → extra time & penalties" | ⚠️ partially |
-| England vs Argentina (Semi) | 1 – 2 | "draw at 90' → extra time & penalties" | ❌ |
+**Actual:** Returns **404 — "We couldn't find that page."** Users can lock in EPL predictions but can't review them.
 
-## Root Cause (Hypothesis)
+---
 
-The "FINAL OUTCOME" label appears to be **hardcoded** for all knockout-stage matches rather than being dynamically generated based on how each match was actually decided. The logic likely checks `isKnockout` instead of checking whether penalties actually occurred.
+## Bug 4: Leaderboard API Ignores the `comp` Parameter
 
-## Regression Test
+**Severity:** P3
 
-```java
-@Test
-void outcomeTextMatchesActualResult() {
-    driver.get("https://preddyhub.com/world-cup-2026/live?match=537390");
+**Steps:** Call `GET /api/leaderboard?comp=nonexistent-league` or remove `comp` entirely.
 
-    String score = wait.until(ExpectedConditions.presenceOfElementLocated(
-        By.cssSelector(".match-score"))).getText();
-    String[] parts = score.split("\\s*[–-]\\s*");
-    int home = Integer.parseInt(parts[0].trim());
-    int away = Integer.parseInt(parts[1].trim());
+**Expected:** Should return 400 or empty array for unknown competition.
 
-    String outcome = driver.findElement(
-        By.xpath("//*[contains(text(),'FINAL OUTCOME')]/following-sibling::*"))
-        .getText().toLowerCase();
+**Actual:** Returns **200 OK with the full World Cup leaderboard** regardless of the `comp` value. Parameter is silently ignored.
 
-    // If the score is not a draw, the label shouldn't say "draw"
-    if (home != away) {
-        assertFalse(outcome.contains("draw"),
-            "Score is " + home + "-" + away + " but outcome says: " + outcome);
-    }
-}
-```
+---
+
+## Bug 5: La Liga "My Predictions" Also Returns 404
+
+**Severity:** P2
+
+**Steps:** Sign in → go to `https://preddyhub.com/la-liga/my-predictions`
+
+**Expected:** Should show La Liga predictions.
+
+**Actual:** Same **404** as EPL. "My Predictions" route is missing for all non-World Cup competitions.
+
+---
+
+## Bug 6: La Liga Leaderboard Silently Redirects to Homepage
+
+**Severity:** P3
+
+**Steps:** Sign in → go to `https://preddyhub.com/la-liga/leaderboard`
+
+**Expected:** Should show La Liga leaderboard.
+
+**Actual:** **Silently redirects to homepage** — no error, no message, no feedback.
+
+---
+
+## Bug 7: Minus (−) Button Doesn't Work on Prediction Cards
+
+**Severity:** P2
+
+**Steps:** Go to any predict-scores page → click `+` to set score to 1 → click `−`
+
+**Expected:** Score should decrease back to 0.
+
+**Actual:** Minus button is **visible but not interactive**. Can't undo accidental clicks.
+
+---
+
+## Bug 8: Nonexistent Match ID Loads a Real Match
+
+**Severity:** P3
+
+**Steps:** Go to `https://preddyhub.com/world-cup-2026/live?match=99999999`
+
+**Expected:** Should show 404 or "Match not found."
+
+**Actual:** **Loads the Spain vs Argentina Final** silently. No error whatsoever.
+
+---
+
+## Bug 9: "Add to Home Screen" Banner Overlaps Content on Mobile
+
+**Severity:** P3
+
+**Steps:** Open any page in mobile view (375×812) — e.g. predict-scores or live match.
+
+**Expected:** All content should be visible and scrollable.
+
+**Actual:** Large **"Add PreddyHub to your Home Screen"** banner covers match cards. Combined with bottom nav bar and BETA footer, nearly half the screen is blocked.
